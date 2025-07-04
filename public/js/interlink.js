@@ -1,9 +1,20 @@
 (function() {
   'use strict';
 
+  // Auto-detect base URL from script tag
+  function getBaseUrl() {
+    const script = document.querySelector('script[data-user-id]');
+    if (script && script.src) {
+      const url = new URL(script.src);
+      return url.origin;
+    }
+    // Fallback to current domain if auto-detection fails
+    return window.location.origin;
+  }
+
   // Configuration
   const INTERLINK_CONFIG = {
-    apiBaseUrl: 'https://your-domain.vercel.app/api/public/links',
+    apiBaseUrl: getBaseUrl() + '/api/public/links',
     cacheKey: 'interlink_links_cache',
     cacheExpiry: 5 * 60 * 1000, // 5 minutes in milliseconds
     placeholderPattern: /\{\{([^}|]+)(\|custom=([^}]+))?\}\}/g
