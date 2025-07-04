@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { SidebarLayout } from "@/components/dashboard/sidebar-layout"
-import { LinksDataTableNew } from "@/components/data-table/links-data-table-new"
+import { LinksDataTable } from "@/components/data-table/links-data-table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -115,7 +115,7 @@ export default function LinksPage() {
 
   return (
     <SidebarLayout>
-      <LinksDataTableNew
+      <LinksDataTable
         data={links}
         onUpdate={updateLink}
         onDelete={deleteLink}
