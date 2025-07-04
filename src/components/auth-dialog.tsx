@@ -46,8 +46,9 @@ export function AuthDialog({ isOpen, onOpenChange, mode }: AuthDialogProps) {
       }
       onOpenChange(false)
       router.push("/dashboard")
-    } catch (err: any) {
-      setError(err.message || "Authentication failed")
+    } catch (err: unknown) {
+      const errorInfo = err as { message?: string }
+      setError(errorInfo.message || "Authentication failed")
     } finally {
       setIsLoading(false)
     }

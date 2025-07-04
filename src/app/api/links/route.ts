@@ -50,8 +50,9 @@ export async function POST(request: NextRequest) {
 
       const link = rows[0]
       return NextResponse.json(link, { status: 201 })
-    } catch (dbError: any) {
-      if (dbError.code === '23505') { // Unique constraint violation
+    } catch (dbError: unknown) {
+      const errorInfo = dbError as { code?: string }
+      if (errorInfo.code === '23505') { // Unique constraint violation
         return NextResponse.json({ error: "Link key already exists" }, { status: 409 })
       }
       throw dbError

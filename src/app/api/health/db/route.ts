@@ -63,16 +63,17 @@ export async function GET() {
     
     return NextResponse.json(response, { status: 200 })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Database health check failed:", error)
     
+    const errorInfo = error as { message?: string; code?: string; name?: string; detail?: string }
     const response = {
       status: "unhealthy",
       error: {
-        message: error.message,
-        code: error.code,
-        name: error.name,
-        detail: error.detail || null,
+        message: errorInfo.message || "Unknown error",
+        code: errorInfo.code || "UNKNOWN",
+        name: errorInfo.name || "Error",
+        detail: errorInfo.detail || null,
       },
       environment: {
         databaseUrl: process.env.DATABASE_URL ? "✓ Set" : "✗ Missing",

@@ -1,19 +1,22 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import {
   Link,
   Home,
+  LucideIcon,
 } from "lucide-react"
-import { Separator } from "./separator"
 
-interface SidebarProps {}
+interface NavigationItem {
+  id: string
+  label: string
+  icon: LucideIcon
+  route: string
+}
 
-export function Sidebar({}: SidebarProps) {
+export function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
 
   const navigationItems = [
     { id: "home", label: "Home", icon: Home, route: "/dashboard" },
@@ -24,7 +27,7 @@ export function Sidebar({}: SidebarProps) {
   const NavItem = ({
     item,
   }: {
-    item: any
+    item: NavigationItem
   }) => {
     const Icon = item.icon
     const isActive = item.route ? pathname === item.route : false
@@ -42,8 +45,6 @@ export function Sidebar({}: SidebarProps) {
             ? "bg-gray-100 text-gray-900"
             : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
         }`}
-        onMouseEnter={() => setHoveredItem(item.id)}
-        onMouseLeave={() => setHoveredItem(null)}
         onClick={handleClick}
       >
         <Icon className="w-4 h-4" />

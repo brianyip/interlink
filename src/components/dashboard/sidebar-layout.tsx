@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useSession } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Sidebar } from "@/components/ui/sidebar"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 interface SidebarLayoutProps {
   children: React.ReactNode
