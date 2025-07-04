@@ -9,6 +9,9 @@ yarn-error.log*
 out/
 .vercel/
 
+# TypeScript
+tsconfig.tsbuildinfo
+
 # Environment variables
 .env
 .env.local
