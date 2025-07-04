@@ -13,11 +13,12 @@ export default function LoginPage() {
     router.push("/")
   }, [router])
 
-  // Redirect authenticated users to dashboard
-  if (session) {
-    router.push("/dashboard")
-    return null
-  }
+  useEffect(() => {
+    // Redirect authenticated users to dashboard
+    if (session) {
+      router.push("/dashboard")
+    }
+  }, [session, router])
 
   return null
 }

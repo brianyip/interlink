@@ -16,9 +16,13 @@
   const INTERLINK_CONFIG = {
     apiBaseUrl: getBaseUrl() + '/api/public/links',
     cacheKey: 'interlink_links_cache',
-    cacheExpiry: 5 * 60 * 1000, // 5 minutes in milliseconds
-    placeholderPattern: /\{\{([^}|]+)(\|custom=([^}]+))?\}\}/g
+    cacheExpiry: 5 * 60 * 1000 // 5 minutes in milliseconds
   };
+
+  // Helper function to escape special regex characters
+  function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
 
   // Cache management
   const Cache = {
@@ -55,10 +59,7 @@
   function Interlink(userId, options) {
     this.userId = userId;
     this.options = Object.assign({
-      replaceAll: true,
-      customFallback: function(key, customText) {
-        return customText || '{{' + key + '}}';
-      }
+      replaceAll: true
     }, options || {});
     
     this.links = null;
@@ -140,15 +141,28 @@
     // Replace placeholders in text
     replacePlaceholders: function(text) {
       const self = this;
-      return text.replace(INTERLINK_CONFIG.placeholderPattern, function(match, key, customParam, customText) {
-        const link = self.findLink(key);
-        if (link) {
-          return self.generateReplacement(link, customText);
-        } else {
-          // Use fallback function
-          return self.options.customFallback(key, customText);
+      if (!this.links || this.links.length === 0) {
+        return text;
+      }
+
+      // Sort links by key length (descending) to handle overlapping keys
+      const sortedLinks = this.links.slice().sort(function(a, b) {
+        return b.key.length - a.key.length;
+      });
+
+      let replacedText = text;
+      
+      // Replace each link key with its display text/link
+      sortedLinks.forEach(function(link) {
+        if (link.key && link.key.trim()) {
+          const escapedKey = escapeRegex(link.key);
+          const regex = new RegExp(escapedKey, 'g');
+          const replacement = self.generateReplacement(link, null);
+          replacedText = replacedText.replace(regex, replacement);
         }
       });
+
+      return replacedText;
     },
 
     // Process DOM nodes

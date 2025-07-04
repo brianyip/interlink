@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Search, Plus, MoreHorizontal, Trash2 } from "lucide-react"
+import { Search, Plus, MoreHorizontal, Trash2, ChevronUp, ChevronDown } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -123,14 +123,68 @@ function EditableCell({ link, field, value, onUpdate, onStartEdit }: EditableCel
 
 export function LinksDataTable({ data, onUpdate, onDelete, onAdd }: LinksDataTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [sortConfig, setSortConfig] = useState<{
+    column: keyof LinkType | null
+    direction: 'asc' | 'desc'
+  }>({ column: null, direction: 'asc' })
 
   // Filter links based on search query
-  const filteredLinks = data.filter(
-    (link) =>
-      link.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      link.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (link.url && link.url.toLowerCase().includes(searchQuery.toLowerCase()))
-  )
+  const filteredLinks = useMemo(() => {
+    return data.filter(
+      (link) =>
+        link.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        link.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (link.url && link.url.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+  }, [data, searchQuery])
+
+  // Sort filtered links
+  const sortedLinks = useMemo(() => {
+    if (!sortConfig.column) return filteredLinks
+
+    return [...filteredLinks].sort((a, b) => {
+      const aValue = a[sortConfig.column!]
+      const bValue = b[sortConfig.column!]
+
+      // Handle null/undefined values
+      if (aValue === null || aValue === undefined) return 1
+      if (bValue === null || bValue === undefined) return -1
+
+      // Convert to string for comparison
+      const aStr = String(aValue).toLowerCase()
+      const bStr = String(bValue).toLowerCase()
+
+      if (aStr < bStr) {
+        return sortConfig.direction === 'asc' ? -1 : 1
+      }
+      if (aStr > bStr) {
+        return sortConfig.direction === 'asc' ? 1 : -1
+      }
+      return 0
+    })
+  }, [filteredLinks, sortConfig])
+
+  const handleSort = (column: keyof LinkType) => {
+    if (sortConfig.column === column) {
+      // If clicking the same column, toggle direction
+      setSortConfig({
+        column,
+        direction: sortConfig.direction === 'asc' ? 'desc' : 'asc'
+      })
+    } else {
+      // If clicking a new column, start with ascending
+      setSortConfig({ column, direction: 'asc' })
+    }
+  }
+
+  const getSortIcon = (column: keyof LinkType) => {
+    if (sortConfig.column !== column) return null
+    return sortConfig.direction === 'asc' ? (
+      <ChevronUp className="w-4 h-4" />
+    ) : (
+      <ChevronDown className="w-4 h-4" />
+    )
+  }
 
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "inactive" : "active"
@@ -166,15 +220,47 @@ export function LinksDataTable({ data, onUpdate, onDelete, onAdd }: LinksDataTab
         <Table>
           <TableHeader className="bg-gray-50/80 border-b border-gray-200">
             <TableRow>
-              <TableHead className="p-4 text-sm font-medium text-gray-500">Key</TableHead>
-              <TableHead className="p-4 text-sm font-medium text-gray-500">Display Text</TableHead>
-              <TableHead className="p-4 text-sm font-medium text-gray-500">Link</TableHead>
-              <TableHead className="p-4 text-sm font-medium text-gray-500">Status</TableHead>
+              <TableHead 
+                className="p-4 text-sm font-medium text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                onClick={() => handleSort('key')}
+              >
+                <div className="flex items-center gap-2">
+                  Key
+                  {getSortIcon('key')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="p-4 text-sm font-medium text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                onClick={() => handleSort('displayName')}
+              >
+                <div className="flex items-center gap-2">
+                  Display Text
+                  {getSortIcon('displayName')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="p-4 text-sm font-medium text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                onClick={() => handleSort('url')}
+              >
+                <div className="flex items-center gap-2">
+                  Link
+                  {getSortIcon('url')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="p-4 text-sm font-medium text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+                onClick={() => handleSort('status')}
+              >
+                <div className="flex items-center gap-2">
+                  Status
+                  {getSortIcon('status')}
+                </div>
+              </TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredLinks.map((link, index) => (
+            {sortedLinks.map((link, index) => (
               <TableRow
                 key={link.id}
                 className={`border-b border-gray-100 hover:bg-gray-50 ${
@@ -251,7 +337,7 @@ export function LinksDataTable({ data, onUpdate, onDelete, onAdd }: LinksDataTab
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t bg-gray-50">
           <div className="text-sm text-gray-600">
-            Viewing 1-{filteredLinks.length} of {filteredLinks.length} links
+            Viewing 1-{sortedLinks.length} of {sortedLinks.length} links
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" disabled>

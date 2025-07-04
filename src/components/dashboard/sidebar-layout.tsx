@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { useSession } from "@/lib/auth-client"
+import { useSession, signOut } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Sidebar } from "@/components/ui/sidebar"
 import { useRouter } from "next/navigation"
@@ -15,8 +15,14 @@ export function SidebarLayout({ children }: SidebarLayoutProps) {
   const router = useRouter()
 
   const handleSignOut = async () => {
-    await fetch("/api/auth/sign-out", { method: "POST" })
-    router.push("/login")
+    try {
+      await signOut()
+      // Better Auth handles the redirect automatically
+    } catch (error) {
+      console.error("Sign out failed:", error)
+      // Fallback redirect on error
+      router.push("/login")
+    }
   }
 
   // Handle authentication redirect safely after render

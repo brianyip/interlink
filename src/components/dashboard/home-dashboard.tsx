@@ -13,14 +13,14 @@ const exampleLinks = [
     id: "1",
     key: "chasesapphirepreferred",
     displayText: "Chase Sapphire Preferred",
-    url: "",
+    url: "https://example.com",
     status: "active" as const,
   },
   {
     id: "2",
     key: "smartertravel",
     displayText: "Smarter Travel Card", 
-    url: "https://www.google.com",
+    url: "https://example.com",
     status: "active" as const,
   }
 ];
@@ -68,7 +68,7 @@ export function HomeDashboard() {
                 1
               </div>
               <div>
-                <CardTitle>Add JS snippet to your website</CardTitle>
+                <CardTitle className="text-lg font-semibold">Add JS snippet to your website</CardTitle>
                 <CardDescription>
                   Copy and paste this script tag into your website&apos;s HTML head section.
                 </CardDescription>
@@ -76,8 +76,8 @@ export function HomeDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="relative">
-              <pre className="bg-gray-50 border rounded-lg p-4 text-sm overflow-x-auto">
+            <div className="relative max-w-md">
+              <pre className="bg-gray-50 border rounded-lg p-4 text-sm overflow-x-auto max-w-md whitespace-nowrap">
                 <code className="text-gray-800">{jsSnippet}</code>
               </pre>
               <Button
@@ -94,11 +94,6 @@ export function HomeDashboard() {
                 )}
               </Button>
             </div>
-            {session?.user?.id && (
-              <p className="text-xs text-gray-500 mt-2">
-                Your User ID: <span className="font-mono">{session.user.id}</span>
-              </p>
-            )}
           </CardContent>
         </Card>
 
@@ -110,7 +105,7 @@ export function HomeDashboard() {
                 2
               </div>
               <div>
-                <CardTitle>Manage your links</CardTitle>
+                <CardTitle className="text-lg font-semibold">Manage your links</CardTitle>
                 <CardDescription>
                   Create and manage your link references that can be dynamically replaced on your website.
                 </CardDescription>
@@ -120,20 +115,20 @@ export function HomeDashboard() {
           <CardContent>
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               <Table>
-                <TableHeader className="bg-gray-50/80 border-b border-gray-200">
+                <TableHeader className="bg-gray-50 border-b border-gray-200">
                   <TableRow>
-                    <TableHead className="p-4 text-sm font-medium text-gray-500">Key</TableHead>
-                    <TableHead className="p-4 text-sm font-medium text-gray-500">Display Text</TableHead>
-                    <TableHead className="p-4 text-sm font-medium text-gray-500">Link</TableHead>
-                    <TableHead className="p-4 text-sm font-medium text-gray-500">Status</TableHead>
+                    <TableHead className="p-4 text-sm text-gray-600">Key</TableHead>
+                    <TableHead className="p-4 text-sm text-gray-600">Display Text</TableHead>
+                    <TableHead className="p-4 text-sm text-gray-600">Link</TableHead>
+                    <TableHead className="p-4 text-sm text-gray-600">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {exampleLinks.map((link, index) => (
                     <TableRow
                       key={link.id}
-                      className={`border-b border-gray-100 hover:bg-gray-50 ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-50/20"
+                      className={`border-b border-gray-100 ${
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
                       }`}
                     >
                       <TableCell className="p-4">
@@ -150,15 +145,15 @@ export function HomeDashboard() {
                       <TableCell className="p-4">
                         <Badge
                           variant={link.status === "active" ? "default" : "secondary"}
-                          className={`flex items-center gap-2 ${
+                          className={`${
                             link.status === "active"
-                              ? "bg-green-100 text-green-700 border-green-200"
-                              : "bg-gray-100 text-gray-600 border-gray-200"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-600"
                           }`}
                         >
                           <div
-                            className={`w-2 h-2 rounded-full ${
-                              link.status === "active" ? "bg-green-600" : "bg-gray-400"
+                            className={`w-2 h-2 rounded-full mr-2 ${
+                              link.status === "active" ? "bg-green-500" : "bg-gray-400"
                             }`}
                           />
                           {link.status}
@@ -180,37 +175,96 @@ export function HomeDashboard() {
                 3
               </div>
               <div>
-                <CardTitle>How it works</CardTitle>
+                <CardTitle className="text-lg font-semibold">How it works</CardTitle>
                 <CardDescription>
-                  Interlink automatically replaces text patterns in your webpage with dynamic content.
+                  Interlink automatically finds and replaces text patterns in your webpage with dynamic content.
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                <div>
-                  <p className="text-sm">
-                    <strong>Finds text like</strong> <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono">{`{{cardkey}}`}</code> <strong>in the webpage</strong>
+            <div className="space-y-6">
+              {/* Step 1: Finds Text */}
+              <div className="flex items-start gap-4">
+                <div className="text-2xl">🔍</div>
+                <div className="flex-1">
+                  <h4 className="text-sm mb-2">
+                    <strong>
+                      Finds placeholder text patterns
+                    </strong>
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Searches for text like{" "}
+                    <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">{`{{chasesapphirepreferred}}`}</code>{" "}
+                    in your webpage
                   </p>
+                  <div className="bg-gray-50 p-3 rounded border-l-4 border-blue-200">
+                    <p className="text-sm text-gray-700">
+                      <strong>Your content:</strong>
+                      <br />
+                      <code className="text-sm">
+                        Earn rewards with the{" "}
+                        {`{{chasesapphirepreferred}}`}
+                      </code>
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                <div>
-                  <p className="text-sm">
-                    <strong>Replaces with display text</strong> from user&apos;s links table
+
+              {/* Step 2: Replaces with Display Text */}
+              <div className="flex items-start gap-4">
+                <div className="text-2xl">🔗</div>
+                <div className="flex-1">
+                  <h4 className="text-sm mb-2">
+                    <strong>Replaces with display text</strong>
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Matches the key from your links table and
+                    replaces with the display text
                   </p>
+                  <div className="bg-green-50 p-3 rounded border-l-4 border-green-200">
+                    <p className="text-sm text-gray-700">
+                      <strong>Becomes:</strong>
+                      <br />
+                      <span className="text-sm">
+                        Earn rewards with the{" "}
+                        <strong>
+                          Chase Sapphire Preferred
+                        </strong>
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                <div>
-                  <p className="text-sm">
-                    <strong>Can optionally create links</strong> if URL is provided
+
+              {/* Step 3: Optional Links */}
+              <div className="flex items-start gap-4">
+                <div className="text-2xl">✅</div>
+                <div className="flex-1">
+                  <h4 className="text-sm mb-2">
+                    <strong>
+                      Creates clickable links (optional)
+                    </strong>
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    If a URL is provided in your links table,
+                    the text becomes a clickable link
                   </p>
+                  <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-200">
+                    <p className="text-sm text-gray-700">
+                      <strong>With URL becomes:</strong>
+                      <br />
+                      <span className="text-sm">
+                        Earn rewards with the{" "}
+                        <a
+                          href="#"
+                          className="text-blue-600 underline"
+                        >
+                          Chase Sapphire Preferred
+                        </a>
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
