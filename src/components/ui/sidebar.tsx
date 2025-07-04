@@ -37,7 +37,7 @@ export function Sidebar({}: SidebarProps) {
 
     return (
       <button
-        className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${
+        className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors cursor-pointer ${
           isActive
             ? "bg-gray-100 text-gray-900"
             : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"

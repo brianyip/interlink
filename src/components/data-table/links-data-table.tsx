@@ -154,7 +154,7 @@ export function LinksDataTable({ data, onUpdate, onDelete, onAdd }: LinksDataTab
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button onClick={onAdd}>
+          <Button onClick={onAdd} className="cursor-pointer">
             <Plus className="w-4 h-4 mr-2" />
             Create link
           </Button>
