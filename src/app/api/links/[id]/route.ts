@@ -5,9 +5,10 @@ import { LinkUpdateInput } from "@/lib/types"
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await auth.api.getSession({
       headers: request.headers
     })
@@ -45,7 +46,7 @@ export async function PATCH(
     }
     
     updates.push(`"updatedAt" = NOW()`)
-    values.push(params.id, session.user.id)
+    values.push(id, session.user.id)
     
     try {
       const { rows } = await db.query(
@@ -74,9 +75,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await auth.api.getSession({
       headers: request.headers
     })
@@ -87,7 +89,7 @@ export async function DELETE(
 
     const { rows } = await db.query(
       'DELETE FROM links WHERE id = $1 AND "userId" = $2 RETURNING id',
-      [params.id, session.user.id]
+      [id, session.user.id]
     )
     
     if (rows.length === 0) {

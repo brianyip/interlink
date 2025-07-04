@@ -4,12 +4,13 @@ import { PublicLink } from "@/lib/types"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params
     const { rows: links } = await db.query(
       'SELECT key, "displayName", url, status FROM links WHERE "userId" = $1 AND status = $2 ORDER BY key',
-      [params.userId, 'active']
+      [userId, 'active']
     )
 
     const publicLinks: PublicLink[] = links.map(link => ({

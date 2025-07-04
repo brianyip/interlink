@@ -102,7 +102,7 @@ export function LinkManager() {
     setFormData({
       key: link.key,
       displayName: link.displayName,
-      url: link.url,
+      url: link.url || undefined,
       status: link.status
     })
     setShowForm(true)

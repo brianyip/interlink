@@ -37,6 +37,7 @@ export function AuthDialog({ isOpen, onOpenChange, mode }: AuthDialogProps) {
         await signUp.email({
           email,
           password,
+          name: email.split('@')[0], // Use email prefix as default name
         })
       } else {
         await signIn.email({
