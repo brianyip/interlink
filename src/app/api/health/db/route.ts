@@ -33,7 +33,7 @@ export async function GET() {
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
-      AND table_name IN ('user', 'session', 'account', 'verification')
+      AND table_name IN ('user', 'session', 'account', 'verification', 'links')
       ORDER BY table_name
     `)
 
@@ -49,8 +49,8 @@ export async function GET() {
       betterAuth: {
         tablesFound: tablesResult.rows.map(row => row.table_name),
         tablesCount: tablesResult.rows.length,
-        expectedTables: ['account', 'session', 'user', 'verification'],
-        allTablesExist: tablesResult.rows.length === 4,
+        expectedTables: ['account', 'links', 'session', 'user', 'verification'],
+        allTablesExist: tablesResult.rows.length === 5,
       },
       environment: {
         databaseUrl: process.env.DATABASE_URL ? "✓ Set" : "✗ Missing",

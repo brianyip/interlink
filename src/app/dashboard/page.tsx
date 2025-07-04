@@ -1,12 +1,12 @@
-import { DashboardLayout } from "@/components/dashboard/layout"
-import { CardManager } from "@/components/dashboard/card-manager"
+import { SidebarLayout } from "@/components/dashboard/sidebar-layout"
+import { LinkManager } from "@/components/dashboard/link-manager"
 
 export default function DashboardPage() {
   return (
-    <DashboardLayout>
+    <SidebarLayout>
       <div className="px-4 sm:px-0">
-        <CardManager />
+        <LinkManager />
       </div>
-    </DashboardLayout>
+    </SidebarLayout>
   )
 }

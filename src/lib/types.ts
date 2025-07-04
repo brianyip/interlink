@@ -1,31 +1,31 @@
-export interface Card {
+export interface Link {
   id: string
-  user_id: string
+  userId: string
   key: string
-  display_name: string
-  terms_url: string
+  displayName: string
+  url: string | null
   status: 'active' | 'inactive'
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
-export interface CardCreateInput {
+export interface LinkCreateInput {
   key: string
-  display_name: string
-  terms_url: string
+  displayName: string
+  url?: string
   status?: 'active' | 'inactive'
 }
 
-export interface CardUpdateInput {
+export interface LinkUpdateInput {
   key?: string
-  display_name?: string
-  terms_url?: string
+  displayName?: string
+  url?: string
   status?: 'active' | 'inactive'
 }
 
-export interface PublicCard {
+export interface PublicLink {
   key: string
-  display_name: string
-  terms_url: string
+  displayName: string
+  url: string | null
   status: 'active'
 }

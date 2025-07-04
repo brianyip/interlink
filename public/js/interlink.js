@@ -3,10 +3,10 @@
 
   // Configuration
   const INTERLINK_CONFIG = {
-    apiBaseUrl: 'https://your-domain.vercel.app/api/public/cards',
-    cacheKey: 'interlink_cards_cache',
+    apiBaseUrl: 'https://your-domain.vercel.app/api/public/links',
+    cacheKey: 'interlink_links_cache',
     cacheExpiry: 5 * 60 * 1000, // 5 minutes in milliseconds
-    placeholderPattern: /\{\{Card:([^}|]+)(\|custom=([^}]+))?\}\}/g
+    placeholderPattern: /\{\{([^}|]+)(\|custom=([^}]+))?\}\}/g
   };
 
   // Cache management
@@ -46,25 +46,25 @@
     this.options = Object.assign({
       replaceAll: true,
       customFallback: function(key, customText) {
-        return customText || '{{Card:' + key + '}}';
+        return customText || '{{' + key + '}}';
       }
     }, options || {});
     
-    this.cards = null;
+    this.links = null;
     this.isLoading = false;
   }
 
   Interlink.prototype = {
-    // Fetch cards from API
-    fetchCards: function() {
+    // Fetch links from API
+    fetchLinks: function() {
       const self = this;
       const cacheKey = INTERLINK_CONFIG.cacheKey + '_' + this.userId;
       
       // Check cache first
-      const cachedCards = Cache.get(cacheKey);
-      if (cachedCards) {
-        this.cards = cachedCards;
-        return Promise.resolve(cachedCards);
+      const cachedLinks = Cache.get(cacheKey);
+      if (cachedLinks) {
+        this.links = cachedLinks;
+        return Promise.resolve(cachedLinks);
       }
 
       // Return existing promise if already loading
@@ -76,41 +76,47 @@
       this.loadingPromise = fetch(INTERLINK_CONFIG.apiBaseUrl + '/' + this.userId)
         .then(function(response) {
           if (!response.ok) {
-            throw new Error('Failed to fetch cards: ' + response.status);
+            throw new Error('Failed to fetch links: ' + response.status);
           }
           return response.json();
         })
-        .then(function(cards) {
-          self.cards = cards;
+        .then(function(links) {
+          self.links = links;
           self.isLoading = false;
           
           // Cache the results
-          Cache.set(cacheKey, cards, INTERLINK_CONFIG.cacheExpiry);
+          Cache.set(cacheKey, links, INTERLINK_CONFIG.cacheExpiry);
           
-          return cards;
+          return links;
         })
         .catch(function(error) {
           self.isLoading = false;
-          console.warn('Interlink: Failed to fetch cards', error);
+          console.warn('Interlink: Failed to fetch links', error);
           return [];
         });
 
       return this.loadingPromise;
     },
 
-    // Find card by key
-    findCard: function(key) {
-      if (!this.cards) return null;
-      return this.cards.find(function(card) {
-        return card.key === key;
+    // Find link by key
+    findLink: function(key) {
+      if (!this.links) return null;
+      return this.links.find(function(link) {
+        return link.key === key;
       });
     },
 
     // Generate replacement HTML
-    generateReplacement: function(card, customText) {
-      const displayText = customText || card.display_name;
-      return '<a href="' + this.escapeHtml(card.terms_url) + '" target="_blank" rel="nofollow">' + 
-             this.escapeHtml(displayText) + ' (terms)</a>';
+    generateReplacement: function(link, customText) {
+      const displayText = customText || link.displayName;
+      
+      // Only add hyperlink if URL is provided
+      if (link.url && link.url.trim()) {
+        return '<a href="' + this.escapeHtml(link.url) + '" target="_blank" rel="nofollow">' + 
+               this.escapeHtml(displayText) + '</a>';
+      } else {
+        return this.escapeHtml(displayText);
+      }
     },
 
     // Escape HTML to prevent XSS
@@ -124,9 +130,9 @@
     replacePlaceholders: function(text) {
       const self = this;
       return text.replace(INTERLINK_CONFIG.placeholderPattern, function(match, key, customParam, customText) {
-        const card = self.findCard(key);
-        if (card) {
-          return self.generateReplacement(card, customText);
+        const link = self.findLink(key);
+        if (link) {
+          return self.generateReplacement(link, customText);
         } else {
           // Use fallback function
           return self.options.customFallback(key, customText);
@@ -171,8 +177,8 @@
 
     // Process the entire document
     processDocument: function() {
-      if (!this.cards) {
-        console.warn('Interlink: No cards loaded');
+      if (!this.links) {
+        console.warn('Interlink: No links loaded');
         return;
       }
 
@@ -184,7 +190,7 @@
     init: function() {
       const self = this;
       
-      this.fetchCards().then(function() {
+      this.fetchLinks().then(function() {
         self.processDocument();
       });
     }

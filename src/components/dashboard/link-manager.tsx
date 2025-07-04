@@ -6,110 +6,110 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PlusCircle, Edit2, Trash2 } from "lucide-react"
-import { Card as CardType, CardCreateInput, CardUpdateInput } from "@/lib/types"
+import { Link as LinkType, LinkCreateInput, LinkUpdateInput } from "@/lib/types"
 
-export function CardManager() {
-  const [cards, setCards] = useState<CardType[]>([])
+export function LinkManager() {
+  const [links, setLinks] = useState<LinkType[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [editingCard, setEditingCard] = useState<CardType | null>(null)
+  const [editingLink, setEditingLink] = useState<LinkType | null>(null)
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState<CardCreateInput>({
+  const [formData, setFormData] = useState<LinkCreateInput>({
     key: "",
-    display_name: "",
-    terms_url: "",
+    displayName: "",
+    url: "",
     status: "active"
   })
 
-  // Fetch cards
-  const fetchCards = async () => {
+  // Fetch links
+  const fetchLinks = async () => {
     try {
-      const response = await fetch("/api/cards")
+      const response = await fetch("/api/links")
       if (response.ok) {
         const data = await response.json()
-        setCards(data)
+        setLinks(data)
       }
     } catch (error) {
-      console.error("Failed to fetch cards:", error)
+      console.error("Failed to fetch links:", error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Create card
-  const createCard = async () => {
+  // Create link
+  const createLink = async () => {
     try {
-      const response = await fetch("/api/cards", {
+      const response = await fetch("/api/links", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       })
       if (response.ok) {
-        fetchCards()
+        fetchLinks()
         resetForm()
       }
     } catch (error) {
-      console.error("Failed to create card:", error)
+      console.error("Failed to create link:", error)
     }
   }
 
-  // Update card
-  const updateCard = async (id: string, data: CardUpdateInput) => {
+  // Update link
+  const updateLink = async (id: string, data: LinkUpdateInput) => {
     try {
-      const response = await fetch(`/api/cards/${id}`, {
+      const response = await fetch(`/api/links/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       })
       if (response.ok) {
-        fetchCards()
-        setEditingCard(null)
+        fetchLinks()
+        setEditingLink(null)
       }
     } catch (error) {
-      console.error("Failed to update card:", error)
+      console.error("Failed to update link:", error)
     }
   }
 
-  // Delete card
-  const deleteCard = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this card?")) return
+  // Delete link
+  const deleteLink = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this link?")) return
     
     try {
-      const response = await fetch(`/api/cards/${id}`, {
+      const response = await fetch(`/api/links/${id}`, {
         method: "DELETE"
       })
       if (response.ok) {
-        fetchCards()
+        fetchLinks()
       }
     } catch (error) {
-      console.error("Failed to delete card:", error)
+      console.error("Failed to delete link:", error)
     }
   }
 
-  // Toggle card status
-  const toggleStatus = async (card: CardType) => {
-    const newStatus = card.status === "active" ? "inactive" : "active"
-    await updateCard(card.id, { status: newStatus })
+  // Toggle link status
+  const toggleStatus = async (link: LinkType) => {
+    const newStatus = link.status === "active" ? "inactive" : "active"
+    await updateLink(link.id, { status: newStatus })
   }
 
   const resetForm = () => {
-    setFormData({ key: "", display_name: "", terms_url: "", status: "active" })
+    setFormData({ key: "", displayName: "", url: "", status: "active" })
     setShowForm(false)
-    setEditingCard(null)
+    setEditingLink(null)
   }
 
-  const startEdit = (card: CardType) => {
-    setEditingCard(card)
+  const startEdit = (link: LinkType) => {
+    setEditingLink(link)
     setFormData({
-      key: card.key,
-      display_name: card.display_name,
-      terms_url: card.terms_url,
-      status: card.status
+      key: link.key,
+      displayName: link.displayName,
+      url: link.url,
+      status: link.status
     })
     setShowForm(true)
   }
 
   useEffect(() => {
-    fetchCards()
+    fetchLinks()
   }, [])
 
   if (isLoading) {
@@ -119,10 +119,10 @@ export function CardManager() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Card Management</h2>
+        <h2 className="text-2xl font-bold">Links</h2>
         <Button onClick={() => setShowForm(true)}>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Card
+          Add Link
         </Button>
       </div>
 
@@ -130,9 +130,9 @@ export function CardManager() {
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>{editingCard ? "Edit Card" : "Add New Card"}</CardTitle>
+            <CardTitle>{editingLink ? "Edit Link" : "Add New Link"}</CardTitle>
             <CardDescription>
-              {editingCard ? "Update card information" : "Create a new card reference"}
+              {editingLink ? "Update link information" : "Create a new link reference"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -140,28 +140,28 @@ export function CardManager() {
               <Label htmlFor="key">Key</Label>
               <Input
                 id="key"
-                placeholder="e.g., ChaseSapphirePreferred"
+                placeholder="e.g., chasesapphirepreferred"
                 value={formData.key}
                 onChange={(e) => setFormData({ ...formData, key: e.target.value })}
               />
             </div>
             <div>
-              <Label htmlFor="display_name">Display Name</Label>
+              <Label htmlFor="displayName">Display Name</Label>
               <Input
-                id="display_name"
+                id="displayName"
                 placeholder="e.g., Chase Sapphire Preferred"
-                value={formData.display_name}
-                onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                value={formData.displayName}
+                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
               />
             </div>
             <div>
-              <Label htmlFor="terms_url">Terms URL</Label>
+              <Label htmlFor="url">URL (optional)</Label>
               <Input
-                id="terms_url"
+                id="url"
                 type="url"
                 placeholder="https://chase.com/terms/sapphire-preferred"
-                value={formData.terms_url}
-                onChange={(e) => setFormData({ ...formData, terms_url: e.target.value })}
+                value={formData.url}
+                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
               />
             </div>
             <div>
@@ -177,8 +177,8 @@ export function CardManager() {
               </select>
             </div>
             <div className="flex space-x-2">
-              <Button onClick={editingCard ? () => updateCard(editingCard.id, formData) : createCard}>
-                {editingCard ? "Update" : "Create"} Card
+              <Button onClick={editingLink ? () => updateLink(editingLink.id, formData) : createLink}>
+                {editingLink ? "Update" : "Create"} Link
               </Button>
               <Button variant="outline" onClick={resetForm}>
                 Cancel
@@ -188,40 +188,40 @@ export function CardManager() {
         </Card>
       )}
 
-      {/* Cards List */}
+      {/* Links List */}
       <div className="grid gap-4">
-        {cards.map((card) => (
-          <Card key={card.id}>
+        {links.map((link) => (
+          <Card key={link.id}>
             <CardContent className="flex items-center justify-between p-6">
               <div>
-                <h3 className="font-semibold">{card.display_name}</h3>
-                <p className="text-sm text-gray-600">Key: {card.key}</p>
-                <p className="text-sm text-gray-600">URL: {card.terms_url}</p>
+                <h3 className="font-semibold">{link.displayName}</h3>
+                <p className="text-sm text-gray-600">Key: {link.key}</p>
+                <p className="text-sm text-gray-600">URL: {link.url || "No URL"}</p>
                 <span className={`inline-block px-2 py-1 rounded text-xs ${
-                  card.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+                  link.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
                 }`}>
-                  {card.status}
+                  {link.status}
                 </span>
               </div>
               <div className="flex space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => toggleStatus(card)}
+                  onClick={() => toggleStatus(link)}
                 >
-                  {card.status === "active" ? "Deactivate" : "Activate"}
+                  {link.status === "active" ? "Deactivate" : "Activate"}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => startEdit(card)}
+                  onClick={() => startEdit(link)}
                 >
                   <Edit2 className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => deleteCard(card.id)}
+                  onClick={() => deleteLink(link.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -231,9 +231,9 @@ export function CardManager() {
         ))}
       </div>
 
-      {cards.length === 0 && (
+      {links.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No cards found. Create your first card to get started.</p>
+          <p className="text-gray-500">No links found. Create your first link to get started.</p>
         </div>
       )}
     </div>

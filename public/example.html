@@ -29,15 +29,15 @@
 <body>
     <h1>Interlink JavaScript Snippet Example</h1>
     
-    <p>This page demonstrates how the Interlink JavaScript snippet works to replace card placeholders with compliant card references.</p>
+    <p>This page demonstrates how the Interlink JavaScript snippet works to replace link placeholders with dynamic content.</p>
     
     <div class="example">
-        <h2>Basic Card References</h2>
-        <p>Here are some example card references that will be replaced:</p>
+        <h2>Basic Link References</h2>
+        <p>Here are some example link references that will be replaced:</p>
         <ul>
-            <li>The <span class="placeholder">{{Card:ChaseSapphirePreferred}}</span> offers great travel benefits.</li>
-            <li>Consider the <span class="placeholder">{{Card:AmexGold}}</span> for dining rewards.</li>
-            <li>The <span class="placeholder">{{Card:CapitalOneSavor}}</span> is excellent for cash back.</li>
+            <li>The <span class="placeholder">{{chasesapphirepreferred}}</span> offers great travel benefits.</li>
+            <li>Consider the <span class="placeholder">{{amexgold}}</span> for dining rewards.</li>
+            <li>The <span class="placeholder">{{capitalonesavor}}</span> is excellent for cash back.</li>
         </ul>
     </div>
     
@@ -45,17 +45,17 @@
         <h2>Custom Display Text</h2>
         <p>You can also use custom display text:</p>
         <ul>
-            <li>Check out this <span class="placeholder">{{Card:ChaseSapphirePreferred|custom=amazing travel card}}</span> for your next trip.</li>
-            <li>The <span class="placeholder">{{Card:AmexGold|custom=premium dining card}}</span> offers 4X points on restaurants.</li>
+            <li>Check out this <span class="placeholder">{{chasesapphirepreferred|custom=amazing travel card}}</span> for your next trip.</li>
+            <li>The <span class="placeholder">{{amexgold|custom=premium dining card}}</span> offers 4X points on restaurants.</li>
         </ul>
     </div>
     
     <div class="example">
         <h2>Fallback Behavior</h2>
-        <p>If a card key doesn't exist, it will fall back gracefully:</p>
+        <p>If a link key doesn't exist, it will fall back gracefully:</p>
         <ul>
-            <li>This <span class="placeholder">{{Card:NonExistentCard}}</span> will remain unchanged.</li>
-            <li>Custom text fallback: <span class="placeholder">{{Card:AnotherNonExistent|custom=custom text here}}</span></li>
+            <li>This <span class="placeholder">{{nonexistentlink}}</span> will remain unchanged.</li>
+            <li>Custom text fallback: <span class="placeholder">{{anothernonexistent|custom=custom text here}}</span></li>
         </ul>
     </div>
     
@@ -64,8 +64,8 @@
         <li>Include the Interlink script with your user ID:
             <pre><code>&lt;script src="https://your-domain.vercel.app/js/interlink.min.js" data-user-id="YOUR_USER_ID" defer&gt;&lt;/script&gt;</code></pre>
         </li>
-        <li>Use placeholders in your content: <code>{{Card:YourCardKey}}</code></li>
-        <li>Optionally add custom text: <code>{{Card:YourCardKey|custom=Your Custom Text}}</code></li>
+        <li>Use placeholders in your content: <code>{{yourlinkkey}}</code></li>
+        <li>Optionally add custom text: <code>{{yourlinkkey|custom=Your Custom Text}}</code></li>
     </ol>
     
     <h2>Configuration Options</h2>

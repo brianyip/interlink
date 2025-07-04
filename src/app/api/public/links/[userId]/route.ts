@@ -1,35 +1,26 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/lib/supabase"
-import { PublicCard } from "@/lib/types"
+import { db } from "@/lib/database"
+import { PublicLink } from "@/lib/types"
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }
 ) {
   try {
-    const supabase = await createServerSupabaseClient()
-    
-    const { data: cards, error } = await supabase
-      .from("cards")
-      .select("key, display_name, terms_url, status")
-      .eq("user_id", params.userId)
-      .eq("status", "active")
-      .order("key")
+    const { rows: links } = await db.query(
+      'SELECT key, "displayName", url, status FROM links WHERE "userId" = $1 AND status = $2 ORDER BY key',
+      [params.userId, 'active']
+    )
 
-    if (error) {
-      console.error("Database error:", error)
-      return NextResponse.json({ error: "Failed to fetch cards" }, { status: 500 })
-    }
-
-    const publicCards: PublicCard[] = cards?.map(card => ({
-      key: card.key,
-      display_name: card.display_name,
-      terms_url: card.terms_url,
+    const publicLinks: PublicLink[] = links.map(link => ({
+      key: link.key,
+      displayName: link.displayName,
+      url: link.url,
       status: "active" as const
-    })) || []
+    }))
 
     // Add CORS headers for public access
-    const response = NextResponse.json(publicCards)
+    const response = NextResponse.json(publicLinks)
     response.headers.set("Access-Control-Allow-Origin", "*")
     response.headers.set("Access-Control-Allow-Methods", "GET")
     response.headers.set("Access-Control-Allow-Headers", "Content-Type")

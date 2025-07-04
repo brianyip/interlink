@@ -3,7 +3,7 @@
 -- Based on official Better Auth documentation
 
 -- Drop existing tables if they exist (for clean setup)
-DROP TABLE IF EXISTS cards CASCADE;
+DROP TABLE IF EXISTS links CASCADE;
 DROP TABLE IF EXISTS verification CASCADE;
 DROP TABLE IF EXISTS account CASCADE;
 DROP TABLE IF EXISTS session CASCADE;
@@ -76,16 +76,16 @@ CREATE TABLE verification (
 );
 
 -- =============================================================================
--- INTERLINK CARDS TABLE (Updated for Better Auth Integration)
+-- INTERLINK LINKS TABLE (Updated for Better Auth Integration)
 -- =============================================================================
 
--- 5. CARDS TABLE (Updated to use TEXT userId for Better Auth compatibility)
-CREATE TABLE cards (
+-- 5. LINKS TABLE (Updated to use TEXT userId for Better Auth compatibility)
+CREATE TABLE links (
     id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
     userId TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
     key TEXT NOT NULL,
     displayName TEXT NOT NULL,
-    termsUrl TEXT NOT NULL,
+    url TEXT,
     status TEXT CHECK (status IN ('active', 'inactive')) DEFAULT 'active',
     createdAt TIMESTAMPTZ DEFAULT NOW(),
     updatedAt TIMESTAMPTZ DEFAULT NOW(),
@@ -122,9 +122,9 @@ CREATE TRIGGER update_verification_updated_at
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
 
--- Cards table trigger
-CREATE TRIGGER update_cards_updated_at 
-    BEFORE UPDATE ON cards 
+-- Links table trigger
+CREATE TRIGGER update_links_updated_at 
+    BEFORE UPDATE ON links 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
 
@@ -148,10 +148,10 @@ CREATE INDEX idx_account_provider_id ON account(providerId);
 CREATE INDEX idx_verification_identifier ON verification(identifier);
 CREATE INDEX idx_verification_expires_at ON verification(expiresAt);
 
--- Cards table indexes (updated for camelCase)
-CREATE INDEX idx_cards_user_id ON cards(userId);
-CREATE INDEX idx_cards_status ON cards(status);
-CREATE INDEX idx_cards_key ON cards(key);
+-- Links table indexes (updated for camelCase)
+CREATE INDEX idx_links_user_id ON links(userId);
+CREATE INDEX idx_links_status ON links(status);
+CREATE INDEX idx_links_key ON links(key);
 
 -- =============================================================================
 -- COMMENTS FOR DOCUMENTATION
@@ -161,9 +161,9 @@ COMMENT ON TABLE "user" IS 'Better Auth core user table - stores user authentica
 COMMENT ON TABLE session IS 'Better Auth session table - manages user sessions with tokens';
 COMMENT ON TABLE account IS 'Better Auth account table - stores auth provider data (email/password, OAuth, etc.)';
 COMMENT ON TABLE verification IS 'Better Auth verification table - handles email verification tokens';
-COMMENT ON TABLE cards IS 'Interlink cards table - user-scoped card metadata for content replacement';
+COMMENT ON TABLE links IS 'Interlink links table - user-scoped link metadata for content replacement';
 
 COMMENT ON COLUMN session.id IS 'Session ID - unique identifier for session record';
 COMMENT ON COLUMN session.token IS 'Session token - used as session cookie value';
 COMMENT ON COLUMN account.providerId IS 'Auth provider ID: "credential" for email/password, "google" for Google OAuth, etc.';
-COMMENT ON COLUMN cards.userId IS 'References Better Auth user.id - ensures user-scoped access to cards';
+COMMENT ON COLUMN links.userId IS 'References Better Auth user.id - ensures user-scoped access to links';
