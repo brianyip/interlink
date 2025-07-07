@@ -3,7 +3,7 @@
 import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { CTA } from "@/components/ui/call-to-action"
+import { LandingPage } from "@/components/ui/landing-page"
 
 export default function Home() {
   const { data: session } = useSession()
@@ -17,11 +17,7 @@ export default function Home() {
 
   // Show landing page if not authenticated
   if (!session) {
-    return (
-      <div className="min-h-screen bg-white">
-        <CTA />
-      </div>
-    )
+    return <LandingPage />
   }
 
   // Show loading if authenticated (while redirecting)
