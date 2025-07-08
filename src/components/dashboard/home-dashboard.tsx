@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { useSession } from "@/lib/auth-client";
+import { ConnectWebflowButton, useWebflowConnection } from "@/components/webflow";
 
 const exampleLinks = [
   {
@@ -28,6 +29,7 @@ const exampleLinks = [
 export function HomeDashboard() {
   const [copied, setCopied] = useState(false);
   const { data: session } = useSession();
+  const { connected: webflowConnected } = useWebflowConnection();
 
   const jsSnippet = session?.user?.id 
     ? `<script src="https://interlink-pi.vercel.app/js/interlink.min.js" data-user-id="${session.user.id}" defer></script>`
@@ -97,12 +99,57 @@ export function HomeDashboard() {
           </CardContent>
         </Card>
 
-        {/* Step 2: Example Links Table */}
+        {/* Step 2: Connect Webflow (if not connected) */}
+        {!webflowConnected && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
+                  2
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-semibold">Connect to Webflow (Optional)</CardTitle>
+                  <CardDescription>
+                    Connect your Webflow account to enable Content Chat and automatic content synchronization.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200">
+                  <div className="text-blue-600 text-xl">✨</div>
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium text-blue-800">
+                      Unlock Content Chat Features
+                    </h3>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• AI-powered content search across your Webflow sites</li>
+                      <li>• Bulk editing and compliance management</li>
+                      <li>• Automatic content synchronization</li>
+                      <li>• Smart card reference management</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <ConnectWebflowButton 
+                  showStatus={true}
+                  onConnectionSuccess={() => {
+                    // Could show a success message or redirect
+                    console.log('Webflow connected successfully!')
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 3: Example Links Table */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
-                2
+                {webflowConnected ? 2 : 3}
               </div>
               <div>
                 <CardTitle className="text-lg font-semibold">Manage your links</CardTitle>
@@ -167,12 +214,12 @@ export function HomeDashboard() {
           </CardContent>
         </Card>
 
-        {/* Step 3: How it works */}
+        {/* Step 4: How it works */}
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
-                3
+                {webflowConnected ? 3 : 4}
               </div>
               <div>
                 <CardTitle className="text-lg font-semibold">How it works</CardTitle>

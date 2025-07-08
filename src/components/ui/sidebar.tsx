@@ -4,8 +4,11 @@ import { useRouter, usePathname } from "next/navigation"
 import {
   Link,
   Home,
+  MessageSquare,
+  Settings,
   LucideIcon,
 } from "lucide-react"
+import { WebflowStatus } from "@/components/webflow"
 
 interface NavigationItem {
   id: string
@@ -21,6 +24,8 @@ export function Sidebar() {
   const navigationItems = [
     { id: "home", label: "Home", icon: Home, route: "/dashboard" },
     { id: "links", label: "Links", icon: Link, route: "/links" },
+    { id: "content-chat", label: "Content Chat", icon: MessageSquare, route: "/content-chat" },
+    { id: "settings", label: "Settings", icon: Settings, route: "/settings/webflow" },
   ]
 
 
@@ -74,6 +79,13 @@ export function Sidebar() {
           ))}
         </div>
 
+        {/* Webflow Connection Status */}
+        <div className="pt-4 border-t border-gray-200">
+          <h3 className="px-3 mb-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Integrations
+          </h3>
+          <WebflowStatus compact={true} showActions={false} />
+        </div>
       </nav>
     </div>
   )
