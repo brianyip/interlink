@@ -370,6 +370,22 @@ export interface WebflowApiResponse<T> {
 }
 
 // =============================================================================
+// WEBFLOW API ERROR TYPES
+// =============================================================================
+
+// Error interface for Webflow API errors with proper typing
+export interface WebflowApiError extends Error {
+  response?: {
+    data?: unknown
+    status?: number
+  }
+  body?: {
+    code?: string
+    message?: string
+  }
+}
+
+// =============================================================================
 // HEALTH CHECK TYPES
 // =============================================================================
 

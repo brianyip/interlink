@@ -6,7 +6,8 @@ import type {
   WebflowConnection, 
   WebflowCollection, 
   WebflowItem, 
-  WebflowApiResponse 
+  WebflowApiResponse,
+  WebflowApiError
 } from './types'
 
 /**
@@ -363,13 +364,13 @@ export async function testWebflowConnection(userId: string): Promise<{
       console.error('Failed to fetch sites:', {
         error: sitesError,
         message: sitesError instanceof Error ? sitesError.message : 'Unknown error',
-        response: (sitesError as any)?.response?.data || (sitesError as any)?.response || 'No response data'
+        response: (sitesError as WebflowApiError)?.response?.data || (sitesError as WebflowApiError)?.response || 'No response data'
       })
       
       // Check if it's a scope-related error
-      if ((sitesError as any)?.body?.code === 'missing_scopes') {
-        console.error('Missing scopes error:', (sitesError as any)?.body?.message)
-        throw new Error(`Missing OAuth scopes: ${(sitesError as any)?.body?.message}`)
+      if ((sitesError as WebflowApiError)?.body?.code === 'missing_scopes') {
+        console.error('Missing scopes error:', (sitesError as WebflowApiError)?.body?.message)
+        throw new Error(`Missing OAuth scopes: ${(sitesError as WebflowApiError)?.body?.message}`)
       }
       
       throw sitesError
@@ -388,12 +389,12 @@ export async function testWebflowConnection(userId: string): Promise<{
       console.error('Failed to fetch authenticated user:', {
         error: userError,
         message: userError instanceof Error ? userError.message : 'Unknown error',
-        response: (userError as any)?.response?.data || (userError as any)?.response || 'No response data'
+        response: (userError as WebflowApiError)?.response?.data || (userError as WebflowApiError)?.response || 'No response data'
       })
       
       // Check if it's a scope-related error
-      if ((userError as any)?.body?.code === 'missing_scopes') {
-        console.error('Missing scopes for user endpoint:', (userError as any)?.body?.message)
+      if ((userError as WebflowApiError)?.body?.code === 'missing_scopes') {
+        console.error('Missing scopes for user endpoint:', (userError as WebflowApiError)?.body?.message)
         // Don't throw error here - we can still proceed with sites access
         userResponse = null
       } else {
@@ -404,7 +405,7 @@ export async function testWebflowConnection(userId: string): Promise<{
     return {
       isValid: true,
       user: userResponse,
-      sites: (sitesResponse as any)?.sites || sitesResponse
+      sites: (sitesResponse as { sites?: unknown[] })?.sites || []
     }
   } catch (error) {
     console.error('Webflow connection test failed:', error)
@@ -432,7 +433,7 @@ export async function getWebflowCollections(
     }
 
     const collectionsResponse = await client.collections.list(siteId)
-    return (collectionsResponse as any).collections || []
+    return (collectionsResponse as { collections?: WebflowCollection[] }).collections || []
   } catch (error) {
     console.error('Failed to get Webflow collections:', error)
     throw new Error('Failed to fetch collections from Webflow')
@@ -463,11 +464,11 @@ export async function getWebflowCollectionItems(
     })
 
     return {
-      items: (itemsResponse as any).items || [],
+      items: (itemsResponse as { items?: WebflowItem[] }).items || [],
       pagination: {
         limit: options.limit || 100,
         offset: options.offset || 0,
-        total: (itemsResponse as any).items?.length || 0
+        total: (itemsResponse as { items?: WebflowItem[] }).items?.length || 0
       }
     }
   } catch (error) {
@@ -496,7 +497,7 @@ export async function updateWebflowCollectionItem(
       fieldData
     })
 
-    return updatedItem as any
+    return updatedItem as unknown as WebflowItem
   } catch (error) {
     console.error('Failed to update Webflow collection item:', error)
     throw new Error('Failed to update collection item in Webflow')
