@@ -1,4 +1,4 @@
-import Webflow from 'webflow-api'
+import { WebflowClient } from 'webflow-api'
 import { encrypt, decrypt } from './encryption'
 import { db } from './database'
 import { safeParseWebflowExpirationDate } from './date-utils'
@@ -36,7 +36,7 @@ export const WEBFLOW_CONFIG = {
   clientId: process.env.WEBFLOW_CLIENT_ID!,
   clientSecret: process.env.WEBFLOW_CLIENT_SECRET!,
   redirectUri: process.env.WEBFLOW_REDIRECT_URI!,
-  scopes: ['cms:read', 'cms:write', 'sites:read'],
+  scopes: ['cms:read', 'cms:write', 'sites:read', 'authorized_user:read'] as const,
   baseUrl: 'https://api.webflow.com'
 } as const
 
@@ -44,13 +44,11 @@ export const WEBFLOW_CONFIG = {
  * Generate OAuth authorization URL for Webflow
  */
 export function generateAuthUrl(state?: string): string {
-  // Create a temporary Webflow instance for OAuth operations
-  const webflow = new Webflow()
-  
-  return webflow.authorizeUrl({
-    client_id: WEBFLOW_CONFIG.clientId,
-    redirect_uri: WEBFLOW_CONFIG.redirectUri,
-    scope: WEBFLOW_CONFIG.scopes.join(' '),
+  // Use WebflowClient static method for OAuth operations
+  return WebflowClient.authorizeURL({
+    clientId: WEBFLOW_CONFIG.clientId,
+    redirectUri: WEBFLOW_CONFIG.redirectUri,
+    scope: [...WEBFLOW_CONFIG.scopes],
     state: state || undefined
   })
 }
@@ -278,7 +276,7 @@ export async function removeWebflowConnection(userId: string): Promise<void> {
 /**
  * Create authenticated Webflow client for user
  */
-export async function createWebflowClient(userId: string): Promise<InstanceType<typeof Webflow> | null> {
+export async function createWebflowClient(userId: string): Promise<InstanceType<typeof WebflowClient> | null> {
   const connection = await getWebflowConnection(userId)
   
   if (!connection) {
@@ -311,13 +309,13 @@ export async function createWebflowClient(userId: string): Promise<InstanceType<
       console.log('Clean token length:', cleanToken.length)
     }
     
-    // Log the exact parameters being passed to Webflow constructor
-    const clientConfig = { token: cleanToken }
-    console.log('Webflow client config keys:', Object.keys(clientConfig))
-    console.log('Creating Webflow client with v1 API (not beta)')
+    // Log the exact parameters being passed to WebflowClient constructor
+    const clientConfig = { accessToken: cleanToken }
+    console.log('WebflowClient config keys:', Object.keys(clientConfig))
+    console.log('Creating WebflowClient with v3 API')
     
     // Try creating the client - if it fails, we'll catch and log more details
-    const client = new Webflow(clientConfig)
+    const client = new WebflowClient(clientConfig)
     console.log('Webflow client created successfully')
     
     return client
@@ -352,40 +350,11 @@ export async function testWebflowConnection(userId: string): Promise<{
 
     console.log('Testing Webflow connection for user:', userId)
     
-    // Test API access by fetching user info first
-    let userResponse
-    try {
-      console.log('Fetching authenticated user...')
-      userResponse = await client.authenticatedUser()
-      console.log('User response received:', {
-        hasUser: !!userResponse?.user,
-        userKeys: userResponse?.user ? Object.keys(userResponse.user) : []
-      })
-    } catch (userError) {
-      console.error('Failed to fetch authenticated user:', {
-        error: userError,
-        message: userError instanceof Error ? userError.message : 'Unknown error',
-        response: (userError as any)?.response?.data || (userError as any)?.response || 'No response data'
-      })
-      
-      // If it's a 400 error, log more details
-      if ((userError as any)?.response?.status === 400) {
-        console.error('400 Bad Request details:', {
-          status: (userError as any)?.response?.status,
-          statusText: (userError as any)?.response?.statusText,
-          data: (userError as any)?.response?.data,
-          headers: (userError as any)?.response?.headers
-        })
-      }
-      
-      throw userError
-    }
-
-    // Then fetch sites
+    // Test API access by fetching sites first (we have sites:read scope)
     let sitesResponse
     try {
       console.log('Fetching sites...')
-      sitesResponse = await client.sites()
+      sitesResponse = await client.sites.list()
       console.log('Sites response received:', {
         sitesCount: Array.isArray(sitesResponse) ? sitesResponse.length : 'Not an array',
         isArray: Array.isArray(sitesResponse)
@@ -397,23 +366,45 @@ export async function testWebflowConnection(userId: string): Promise<{
         response: (sitesError as any)?.response?.data || (sitesError as any)?.response || 'No response data'
       })
       
-      // If it's a 400 error, log more details
-      if ((sitesError as any)?.response?.status === 400) {
-        console.error('400 Bad Request details:', {
-          status: (sitesError as any)?.response?.status,
-          statusText: (sitesError as any)?.response?.statusText,
-          data: (sitesError as any)?.response?.data,
-          headers: (sitesError as any)?.response?.headers
-        })
+      // Check if it's a scope-related error
+      if ((sitesError as any)?.body?.code === 'missing_scopes') {
+        console.error('Missing scopes error:', (sitesError as any)?.body?.message)
+        throw new Error(`Missing OAuth scopes: ${(sitesError as any)?.body?.message}`)
       }
       
       throw sitesError
     }
 
+    // Then test user info (requires authorized_user:read scope)
+    let userResponse
+    try {
+      console.log('Fetching authorized user...')
+      userResponse = await client.token.authorizedBy()
+      console.log('User response received:', {
+        hasUser: !!userResponse,
+        userKeys: userResponse ? Object.keys(userResponse) : []
+      })
+    } catch (userError) {
+      console.error('Failed to fetch authenticated user:', {
+        error: userError,
+        message: userError instanceof Error ? userError.message : 'Unknown error',
+        response: (userError as any)?.response?.data || (userError as any)?.response || 'No response data'
+      })
+      
+      // Check if it's a scope-related error
+      if ((userError as any)?.body?.code === 'missing_scopes') {
+        console.error('Missing scopes for user endpoint:', (userError as any)?.body?.message)
+        // Don't throw error here - we can still proceed with sites access
+        userResponse = null
+      } else {
+        throw userError
+      }
+    }
+
     return {
       isValid: true,
-      user: userResponse.user,
-      sites: sitesResponse
+      user: userResponse,
+      sites: (sitesResponse as any)?.sites || sitesResponse
     }
   } catch (error) {
     console.error('Webflow connection test failed:', error)
@@ -440,8 +431,8 @@ export async function getWebflowCollections(
       throw new Error('No Webflow connection found')
     }
 
-    const collections = await client.collections({ siteId })
-    return collections || []
+    const collectionsResponse = await client.collections.list(siteId)
+    return (collectionsResponse as any).collections || []
   } catch (error) {
     console.error('Failed to get Webflow collections:', error)
     throw new Error('Failed to fetch collections from Webflow')
@@ -466,18 +457,17 @@ export async function getWebflowCollectionItems(
       throw new Error('No Webflow connection found')
     }
 
-    const items = await client.items({
-      collectionId,
+    const itemsResponse = await client.collections.items.listItems(collectionId, {
       limit: options.limit || 100,
       offset: options.offset || 0
     })
 
     return {
-      items: items || [],
+      items: (itemsResponse as any).items || [],
       pagination: {
         limit: options.limit || 100,
         offset: options.offset || 0,
-        total: items?.length || 0
+        total: (itemsResponse as any).items?.length || 0
       }
     }
   } catch (error) {
@@ -502,138 +492,17 @@ export async function updateWebflowCollectionItem(
       throw new Error('No Webflow connection found')
     }
 
-    const updatedItem = await client.updateItem({
-      collectionId,
-      itemId,
-      ...fieldData
+    const updatedItem = await client.collections.items.updateItem(collectionId, itemId, {
+      fieldData
     })
 
-    return updatedItem
+    return updatedItem as any
   } catch (error) {
     console.error('Failed to update Webflow collection item:', error)
     throw new Error('Failed to update collection item in Webflow')
   }
 }
 
-/**
- * Debug function to test Webflow API directly with raw HTTP request
- */
-export async function testWebflowRawApi(accessToken: string): Promise<{
-  success: boolean
-  data?: any
-  error?: string
-  details?: any
-}> {
-  try {
-    console.log('Testing raw Webflow API call')
-    console.log('Token length:', accessToken.length)
-    console.log('Token preview:', `${accessToken.substring(0, 10)}...${accessToken.substring(accessToken.length - 10)}`)
-    
-    // Clean token if it has Bearer prefix
-    const cleanToken = accessToken.startsWith('Bearer ') 
-      ? accessToken.substring(7) 
-      : accessToken
-    
-    // Test with v1 authenticated user endpoint (SDK uses v1)
-    console.log('Testing v1 /user endpoint...')
-    const v1Response = await fetch('https://api.webflow.com/user', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${cleanToken}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-    
-    console.log('V1 API response status:', v1Response.status)
-    console.log('V1 API response headers:', Object.fromEntries(v1Response.headers.entries()))
-    
-    const v1ResponseText = await v1Response.text()
-    console.log('V1 API response body:', v1ResponseText)
-    
-    let v1ResponseData
-    try {
-      v1ResponseData = JSON.parse(v1ResponseText)
-    } catch {
-      v1ResponseData = v1ResponseText
-    }
-    
-    // Also test v2 endpoint for comparison
-    console.log('\nTesting v2 /user endpoint...')
-    const v2Response = await fetch('https://api.webflow.com/v2/user', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${cleanToken}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-    
-    console.log('V2 API response status:', v2Response.status)
-    console.log('V2 API response headers:', Object.fromEntries(v2Response.headers.entries()))
-    
-    const v2ResponseText = await v2Response.text()
-    console.log('V2 API response body:', v2ResponseText)
-    
-    let v2ResponseData
-    try {
-      v2ResponseData = JSON.parse(v2ResponseText)
-    } catch {
-      v2ResponseData = v2ResponseText
-    }
-    
-    const v1Success = v1Response.ok
-    const v2Success = v2Response.ok
-    
-    if (!v1Success && !v2Success) {
-      return {
-        success: false,
-        error: `Both API versions failed - V1: ${v1Response.status}, V2: ${v2Response.status}`,
-        details: {
-          v1: {
-            status: v1Response.status,
-            statusText: v1Response.statusText,
-            data: v1ResponseData,
-            headers: Object.fromEntries(v1Response.headers.entries())
-          },
-          v2: {
-            status: v2Response.status,
-            statusText: v2Response.statusText,
-            data: v2ResponseData,
-            headers: Object.fromEntries(v2Response.headers.entries())
-          }
-        }
-      }
-    }
-    
-    return {
-      success: v1Success || v2Success,
-      data: {
-        v1: v1Success ? v1ResponseData : null,
-        v2: v2Success ? v2ResponseData : null
-      },
-      details: {
-        v1: {
-          status: v1Response.status,
-          success: v1Success,
-          headers: Object.fromEntries(v1Response.headers.entries())
-        },
-        v2: {
-          status: v2Response.status,
-          success: v2Success,
-          headers: Object.fromEntries(v2Response.headers.entries())
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Raw API test failed:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      details: error
-    }
-  }
-}
 
 // Export configuration for use in API routes
 export { WEBFLOW_CONFIG as config }

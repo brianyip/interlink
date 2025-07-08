@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { getWebflowConnection, testWebflowRawApi, testWebflowConnection } from '@/lib/webflow-client'
+import { getWebflowConnection, testWebflowConnection } from '@/lib/webflow-client'
 import { decrypt } from '@/lib/encryption'
 
 export async function GET(request: NextRequest) {
@@ -28,9 +28,6 @@ export async function GET(request: NextRequest) {
     // Decrypt access token
     const decryptedToken = decrypt(connection.accessToken)
     
-    // Test raw API
-    const rawApiTest = await testWebflowRawApi(decryptedToken)
-    
     // Test SDK connection
     let sdkTest
     try {
@@ -56,7 +53,6 @@ export async function GET(request: NextRequest) {
         startsWithBearer: decryptedToken.startsWith('Bearer'),
         tokenPreview: `${decryptedToken.substring(0, 10)}...${decryptedToken.substring(decryptedToken.length - 10)}`
       },
-      rawApiTest,
       sdkTest,
       recommendation: decryptedToken.startsWith('Bearer') 
         ? 'Token has Bearer prefix which SDK adds automatically - this may cause issues' 
