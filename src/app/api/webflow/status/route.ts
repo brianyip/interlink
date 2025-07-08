@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
+import { safeParseWebflowExpirationDate } from '@/lib/date-utils'
 import { 
   getWebflowConnection, 
   testWebflowConnection,
@@ -49,11 +50,13 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Calculate token status
+    // Calculate token status with proper date validation
     const now = new Date()
-    const expiresAt = new Date(connection.expiresAt)
+    const expiresAt = safeParseWebflowExpirationDate(connection.expiresAt)
+    
     const isExpired = now > expiresAt
     const minutesUntilExpiry = Math.max(0, Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60)))
+    const expiresAtString = expiresAt.toISOString()
 
     // Test the connection and get account info
     const connectionTest = await testWebflowConnection(session.user.id)
@@ -66,7 +69,7 @@ export async function GET(request: NextRequest) {
         details: connectionTest.error,
         tokenStatus: {
           isExpired,
-          expiresAt: expiresAt.toISOString(),
+          expiresAt: expiresAtString,
           minutesUntilExpiry
         },
         needsReauth: true
@@ -121,10 +124,11 @@ export async function GET(request: NextRequest) {
       } : null,
       tokenStatus: {
         isExpired,
-        expiresAt: expiresAt.toISOString(),
+        expiresAt: expiresAtString,
         minutesUntilExpiry,
-        needsRefresh: minutesUntilExpiry < 5,
-        scope: connection.scope
+        // Removed needsRefresh - Webflow uses 365-day tokens without refresh
+        scope: connection.scope,
+        tokenType: 'webflow_365_day'
       },
       connection: {
         createdAt: connection.createdAt,
@@ -138,7 +142,7 @@ export async function GET(request: NextRequest) {
         hasContent: sitesData.length > 0 && collectionsCount > 0
       },
       actions: {
-        refreshUrl: '/api/webflow/refresh',
+        // Removed refreshUrl - Webflow tokens are 365-day and don't support refresh
         disconnectUrl: '/api/webflow/disconnect',
         syncUrl: '/api/content/sync' // Future content sync endpoint
       }
@@ -176,30 +180,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse request body for options
+    // Parse request body for options (kept for compatibility)
     const body = await request.json().catch(() => ({}))
-    const { forceRefresh = false } = body
+    console.log('Status refresh requested with options:', body)
 
-    // If force refresh requested, attempt token refresh first
-    if (forceRefresh) {
-      try {
-        const refreshResponse = await fetch(
-          new URL('/api/webflow/refresh', request.url),
-          {
-            method: 'POST',
-            headers: request.headers
-          }
-        )
-        
-        if (!refreshResponse.ok) {
-          console.warn('Force refresh failed:', await refreshResponse.text())
-        }
-      } catch (refreshError) {
-        console.warn('Force refresh error:', refreshError)
-      }
-    }
-
-    // Delegate to GET handler for status check
+    // Note: Force refresh is no longer supported as Webflow uses 365-day tokens
+    // Simply delegate to GET handler for status check
     return GET(request)
 
   } catch (error) {

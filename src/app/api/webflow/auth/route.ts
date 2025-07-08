@@ -25,26 +25,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate state parameter for CSRF protection
-    const state = randomBytes(32).toString('hex')
+    const randomState = randomBytes(32).toString('hex')
     
-    // Store state in session or temporary storage
-    // Note: In production, consider using Redis or encrypted cookies for state storage
-    const authUrl = generateAuthUrl(state)
-
-    // For now, we'll include state in the URL params for the callback to verify
-    // In production, store this securely (Redis, encrypted session, etc.)
-    const stateParam = encodeURIComponent(JSON.stringify({
-      state,
+    // Create state data with user info and timestamp for verification
+    const stateData = JSON.stringify({
+      state: randomState,
       userId: session.user.id,
       timestamp: Date.now()
-    }))
+    })
 
-    const finalAuthUrl = `${authUrl}&state=${stateParam}`
+    // Generate auth URL with encoded state data
+    const authUrl = generateAuthUrl(stateData)
 
     // Return redirect URL (client will handle the actual redirect)
     return NextResponse.json({
-      authUrl: finalAuthUrl,
-      state,
+      authUrl: authUrl,
+      state: randomState,
       message: 'Redirect to Webflow for authorization'
     })
 
@@ -79,15 +75,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate state parameter
-    const state = randomBytes(32).toString('hex')
+    const randomState = randomBytes(32).toString('hex')
     
-    const stateParam = encodeURIComponent(JSON.stringify({
-      state,
+    const stateData = JSON.stringify({
+      state: randomState,
       userId: session.user.id,
       timestamp: Date.now()
-    }))
+    })
 
-    const authUrl = generateAuthUrl(stateParam)
+    const authUrl = generateAuthUrl(stateData)
 
     // Direct redirect to Webflow
     return NextResponse.redirect(authUrl)

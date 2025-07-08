@@ -34,13 +34,14 @@ export interface PublicLink {
 // CONTENT CHAT TYPES
 // =============================================================================
 
-// Webflow OAuth Connection
+// Webflow OAuth Connection (Updated for 365-day tokens)
 export interface WebflowConnection {
   id: string
   userId: string
-  accessToken: string // Encrypted
-  refreshToken: string // Encrypted
+  accessToken: string // Encrypted AES-256
+  refreshToken: string | null // Always null for Webflow (365-day tokens)
   expiresAt: string
+  tokenCreatedAt: string | null // Webflow's created_at timestamp
   scope: string
   createdAt: string
   updatedAt: string

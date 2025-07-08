@@ -83,9 +83,9 @@ async function getUserBySiteId(siteId: string): Promise<string | null> {
     // This is a simplified approach - in production you'd want a proper site->user mapping
     // For now, we'll look for any user who has content from this site
     const { rows } = await db.query(`
-      SELECT DISTINCT userId FROM webflow_content 
+      SELECT DISTINCT userid FROM webflow_content 
       WHERE metadata->>'siteId' = $1 
-      ORDER BY updatedAt DESC 
+      ORDER BY updatedat DESC 
       LIMIT 1
     `, [siteId])
     
@@ -93,14 +93,8 @@ async function getUserBySiteId(siteId: string): Promise<string | null> {
       return rows[0].userid
     }
     
-    // Alternative: look for users with this site in their connection metadata
-    const { rows: connectionRows } = await db.query(`
-      SELECT userId FROM webflow_connections 
-      WHERE metadata->>'sites' @> $1
-      LIMIT 1
-    `, [JSON.stringify([siteId])])
-    
-    return connectionRows.length > 0 ? connectionRows[0].userid : null
+    // Alternative: if no content found, return null (webflow_connections doesn't have site metadata)
+    return null
   } catch (error) {
     console.error('Failed to find user by site ID:', error)
     return null
@@ -134,8 +128,8 @@ async function handleItemUpsert(
     // Log webhook operation
     await db.query(`
       INSERT INTO content_operations (
-        userId, operationType, affectedItems, status, 
-        startedAt, completedAt
+        userid, operationtype, affecteditems, status, 
+        startedat, completedat
       ) VALUES ($1, $2, $3, $4, $5, $6)
     `, [
       userId,

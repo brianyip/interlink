@@ -8,6 +8,21 @@ import {
 } from '@/lib/webflow-client'
 
 /**
+ * Decode HTML entities in text
+ */
+function decodeHtmlEntities(text: string): string {
+  const entities: Record<string, string> = {
+    '&quot;': '"',
+    '&apos;': "'",
+    '&lt;': '<',
+    '&gt;': '>',
+    '&amp;': '&'
+  }
+  
+  return text.replace(/&quot;|&apos;|&lt;|&gt;|&amp;/g, (match) => entities[match] || match)
+}
+
+/**
  * GET /api/webflow/callback
  * 
  * Handles OAuth callback from Webflow
@@ -49,7 +64,15 @@ export async function GET(request: NextRequest) {
     
     if (state) {
       try {
-        stateData = JSON.parse(decodeURIComponent(state))
+        // The state comes URL-encoded from Webflow, decode it first
+        let decodedState = decodeURIComponent(state)
+        console.log('URL decoded state:', decodedState)
+        
+        // Fix HTML entity encoding issue (e.g., &quot; → ")
+        decodedState = decodeHtmlEntities(decodedState)
+        console.log('HTML decoded state:', decodedState)
+        
+        stateData = JSON.parse(decodedState)
         
         // Check state timestamp (expire after 10 minutes)
         const stateAge = Date.now() - stateData.timestamp
@@ -58,6 +81,9 @@ export async function GET(request: NextRequest) {
         }
       } catch (parseError) {
         console.error('Invalid state parameter:', parseError)
+        console.error('Raw state:', state)
+        console.error('URL decoded state:', decodeURIComponent(state))
+        console.error('HTML decoded state:', decodeHtmlEntities(decodeURIComponent(state)))
         
         const dashboardUrl = new URL('/dashboard', request.url)
         dashboardUrl.searchParams.set('error', 'webflow_oauth_invalid')
@@ -93,8 +119,14 @@ export async function GET(request: NextRequest) {
       // Exchange authorization code for tokens
       const tokenData = await exchangeCodeForToken(code)
       
-      // Store encrypted tokens in database
-      await storeWebflowConnection(session.user.id, tokenData)
+      // Store encrypted tokens in database with new schema
+      await storeWebflowConnection(session.user.id, {
+        accessToken: tokenData.accessToken,
+        refreshToken: tokenData.refreshToken, // null for Webflow
+        expiresAt: tokenData.expiresAt,
+        tokenCreatedAt: tokenData.tokenCreatedAt,
+        scope: tokenData.scope
+      })
       
       // Test the connection to ensure it works
       const connectionTest = await testWebflowConnection(session.user.id)
