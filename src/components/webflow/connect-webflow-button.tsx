@@ -39,7 +39,6 @@ export function ConnectWebflowButton({
   size = 'default',
   className,
   showStatus = false,
-  onConnectionSuccess: _onConnectionSuccess,
   onDisconnection,
   disconnectedText = 'Connect to Webflow',
   connectedText = 'Connected to Webflow'

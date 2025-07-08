@@ -48,9 +48,7 @@ export function WebflowSettingsPanel({
   const {
     connected,
     loading,
-    error: _error,
     user,
-    sites: _sites,
     stats,
     tokenStatus,
     disconnect,

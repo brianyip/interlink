@@ -125,7 +125,7 @@ export function useWebflowConnection(): WebflowConnectionState {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
    * Initiate Webflow OAuth connection flow
@@ -220,8 +220,7 @@ export function useWebflowConnection(): WebflowConnectionState {
 
       console.log('Webflow token refreshed successfully')
       
-      // Re-check status to get updated token info
-      await checkStatus()
+      // Note: Caller should re-check status to get updated token info
 
     } catch (err) {
       console.error('Webflow token refresh failed:', err)
@@ -233,7 +232,7 @@ export function useWebflowConnection(): WebflowConnectionState {
         setStatus(null)
       }
     }
-  }, [checkStatus])
+  }, [])
 
   /**
    * Force refresh connection status and test API access
@@ -285,9 +284,12 @@ export function useWebflowConnection(): WebflowConnectionState {
   useEffect(() => {
     if (tokenStatus?.needsRefresh && connected && !loading) {
       console.log('Auto-refreshing Webflow token...')
-      refreshToken()
+      refreshToken().then(() => {
+        // Re-check status after token refresh
+        checkStatus()
+      })
     }
-  }, [tokenStatus?.needsRefresh, connected, loading, refreshToken])
+  }, [tokenStatus?.needsRefresh, connected, loading, refreshToken, checkStatus])
 
   return {
     connected,

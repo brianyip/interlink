@@ -1,8 +1,4 @@
 import OpenAI from 'openai'
-import type { 
-  EmbeddingRequest, 
-  EmbeddingResponse 
-} from './types'
 
 // =============================================================================
 // BATCH PROCESSING TYPES

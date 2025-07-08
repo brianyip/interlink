@@ -216,13 +216,14 @@ export async function POST(request: NextRequest) {
     let body
     try {
       body = await request.json()
-    } catch (parseError) {
+    } catch {
       return NextResponse.json({
         error: 'Invalid JSON in request body'
       }, { status: 400 })
     }
 
-    const { action, contentIds } = body
+    const { action } = body
+    // contentIds could be used for selective operations in the future
 
     if (!action) {
       return NextResponse.json({
@@ -320,7 +321,7 @@ async function performHealthCheck(userId: string): Promise<{
   try {
     await db.query('SELECT 1')
     database = true
-  } catch (error) {
+  } catch {
     database = false
     issues.push('Database connectivity failed')
   }
@@ -335,7 +336,7 @@ async function performHealthCheck(userId: string): Promise<{
     if (!serviceTest.isWorking && serviceTest.error) {
       issues.push(`OpenAI service error: ${serviceTest.error}`)
     }
-  } catch (error) {
+  } catch {
     openai = false
     embeddingService = false
     issues.push('OpenAI configuration invalid')
@@ -351,7 +352,7 @@ async function performHealthCheck(userId: string): Promise<{
     if (!contentAvailable) {
       issues.push('No content available for embedding generation')
     }
-  } catch (error) {
+  } catch {
     contentAvailable = false
     issues.push('Failed to check content availability')
   }

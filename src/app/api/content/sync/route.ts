@@ -90,9 +90,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}))
     const { 
       action = 'sync',
-      clearFirst = false,
-      collections = null // Specific collections to sync (future enhancement)
+      clearFirst = false
     } = body
+    // collections = null // Specific collections to sync (future enhancement)
 
     // Handle clear content action
     if (action === 'clear') {

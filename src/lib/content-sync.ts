@@ -2,7 +2,6 @@ import tiktoken from 'tiktoken'
 import { createHash } from 'crypto'
 import { db } from './database'
 import { 
-  createWebflowClient, 
   getWebflowCollections, 
   getWebflowCollectionItems,
   testWebflowConnection 
@@ -113,8 +112,8 @@ function generateContentHash(content: string): string {
  * Smart content chunking with tiktoken token counting
  */
 function chunkContent(
-  content: string,
-  metadata: { title?: string; url?: string; [key: string]: unknown }
+  content: string
+  // metadata could be used for context in future enhancements
 ): Array<{ content: string; tokens: number; chunkIndex: number }> {
   const encoder = getTokenEncoder()
   const chunks: Array<{ content: string; tokens: number; chunkIndex: number }> = []
@@ -458,12 +457,7 @@ async function syncCollection(
               
               if (storedContent) {
                 // Create chunks
-                const chunks = chunkContent(content, {
-                  title: item.name,
-                  url: `https://${collection.slug}.webflow.io/items/${item._id}`,
-                  collectionName: collection.name,
-                  itemId: item._id
-                })
+                const chunks = chunkContent(content)
                 
                 // Store chunks
                 const storedChunks = await storeContentChunks(userId, storedContent.id, chunks)

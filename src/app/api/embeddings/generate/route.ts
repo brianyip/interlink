@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     let body
     try {
       body = await request.json()
-    } catch (parseError) {
+    } catch {
       return NextResponse.json({
         error: 'Invalid JSON in request body',
         details: 'Request body must be valid JSON'
@@ -138,7 +138,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate embeddings
-    const startTime = Date.now()
     const result: EmbeddingBatchResult = await generateEmbeddingsBatch(texts, options)
     
     console.log(`Embedding generation completed for user ${session.user.id}: ${result.embeddings.length}/${validation.validTexts} successful, cost $${result.totalCost.toFixed(6)}`)
